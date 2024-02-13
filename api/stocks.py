@@ -64,13 +64,27 @@ class StocksAPI(Resource):
             stocks = Stocks.query.all()
             json_ready = [stock.read() for stock in stocks]
             list1 = [item for item in json_ready if item.get('symbol') == symbol]
-            users = User.query.all()
-            json_ready_user1 = [user.read() for user in users]
-            list2 = [item for item in json_ready_user1 if item.get('uid') == uid]
+            #users = User.query.all()
+            #users = User.query.filter(User._uid == uid).all()
+            #user_ids = [user.id for user in User.query.filter(User._uid == uid).first()]
+            #user_ids = User.query.filter(User._uid == uid).first()
+            user_ids = User.query.filter(User._uid == uid).value(User.id)
+          
+            print(user_ids)
+            #json_ready_user1 = [user.read() for user in users]
+            #list2 = [item for item in json_ready_user1 if item.get('uid') == uid]
             ##print(list2)
-            usermoney = list2[0]['stockmoney']
+            #usermoney = list2[0]['stockmoney']
+            #usermoney = [user.stockmoney for user in User.query.filter(User._uid == uid ).first()]
+            #usermoney = User.query.filter(User._uid == uid ).first()
+            usermoney = User.query.filter(User._uid == uid).value(User._stockmoney)
+            
             print(usermoney)
-            currentstockmoney = list1[0]['sheesh']
+            #currentstockmoney = list1[0]['sheesh']
+            #currentstockmoney = [stocks.sheesh for stocks in Stocks.query.filter(Stocks._symbol == symbol ).first()]
+            #currentstockmoney = Stocks.query.filter(Stocks._symbol == symbol ).first()
+            currentstockmoney = Stocks.query.filter(Stocks._symbol == symbol).value(Stocks._sheesh)
+            print(currentstockmoney)
             if (usermoney > currentstockmoney*quantitytobuy):
                 ## updates stock quantity in stocks table
                 tableid = list1[0]['quantity']
@@ -80,17 +94,21 @@ class StocksAPI(Resource):
                 tableid.update(quantity=newquantity )
                 db.session.commit()
                 ## updates user money
-                tableid_user = list2[0]['id']
+                #tableid_user = list2[0]['id']
                 updatedusermoney = usermoney - (currentstockmoney*quantitytobuy)
                 print(updatedusermoney)
-                tableid_user = User.query.get(tableid_user)
+                #tableid_user = User.query.get(tableid_user)
+                tableid_user = User.query.get(user_ids)
                 print(tableid_user)
-                tableid_user.update(stockmoney=updatedusermoney)
+                #tableid_user.update(stockmoney=updatedusermoney)
+                tableid_user.stockmoney = updatedusermoney
+                #User.update(stockmoney=updatedusermoney)
                 db.session.commit()
                 ## creates log for transaction
                 transactionamount = currentstockmoney*quantitytobuy
-                ta = Transactions(uid=uid, symbol=symbol,transaction_type=transactiontype, quantity=quantitytobuy, transaction_amount=transactionamount)
-                ta.create()   
+                #ta = Transactions(uid=uid, symbol=symbol,transaction_type=transactiontype, quantity=quantitytobuy, transaction_amount=transactionamount)
+               # print(ta)
+                #ta.create()   
                 db.session.commit()
             else:
                 return jsonify({'error': 'Insufficient funds'}), 400
