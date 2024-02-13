@@ -205,7 +205,7 @@ class Stocks(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     _symbol = db.Column(db.String(255),unique=False,nullable=False)
     _company = db.Column(db.String(255),unique=False,nullable=False)
-    _quantity = db.Column(db.String(255),unique=False,nullable=False)
+    _quantity = db.Column(db.Integer,unique=False,nullable=False)
     _sheesh = db.Column(db.Integer,unique=False,nullable=False)
     
     # constructor of a User object, initializes the instance variables within object (self)
@@ -267,15 +267,15 @@ class Stocks(db.Model):
         
      # CRUD update: updates user name, password, phone
     # returns self
-    def update(self,symbol="",company="",quantity="",sheesh=""):
+    def update(self,symbol="",company="",quantity=None):
         """only updates values with length"""
         if len(symbol) > 0:
             self.symbol = symbol
         #if sheesh > 0:
-        #    self.sheesh = sheesh
+           # self.sheesh = sheesh
         if len(company) > 0:
             self.company = company
-        if len(quantity) > 0:
+        if quantity is not None:
             self.quantity = quantity
         
         db.session.commit()
@@ -311,7 +311,7 @@ class User(db.Model):
     _pnum = db.Column(db.String(255), unique=False, nullable=True)
     _email = db.Column(db.String(255), unique=True, nullable=True)
     _role = db.Column(db.String(255), unique=False, nullable=True)
-    _stockmoney = db.Column(db.String(255), unique=True, nullable=False)
+    _stockmoney = db.Column(db.Integer, unique=False, nullable=False)
     
     # Defines a relationship between User record and Notes table, one-to-many (one user to many notes)
     posts = db.relationship("Post", cascade='all, delete', backref='users', lazy=True)
@@ -450,7 +450,7 @@ class User(db.Model):
 
     # CRUD update: updates user name, password, phone
     # returns self
-    def update(self, name="", uid="", password="", pnum="", email="", role="",stockmoney=""):
+    def update(self, name="", uid="", stockmoney= None, password="", pnum="", email="", role=""):
         """only updates values with length"""
         if len(name) > 0:
             self.name = name
@@ -464,7 +464,7 @@ class User(db.Model):
             self.email = email
         if len(role) > 0:
             self.role = role
-        if len(stockmoney) > 0:
+        if stockmoney is None:
             self.stockmoney = stockmoney
         db.session.commit()
         return self

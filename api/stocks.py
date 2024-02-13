@@ -54,29 +54,42 @@ class StocksAPI(Resource):
             ##orginalquantity = body.get('avaliablequantity')
             newquantity = body.get('newquantity')
             transactiontype= 'buy'
-            transactiondate = datetime.strptime(transactiondate, '%Y-%m-%d %H:%M:%S').date()
+            dob = body.get('dob')
+            if dob is not None:
+                try:
+                    transactiondate = datetime.strptime(dob, '%Y-%m-%d').date()
+                except:
+                    return {'message': f'Date of birth format error {dob}, must be mm-dd-yyyy'}, 400
             ## update for stocks table to change the amound of stocks left
             stocks = Stocks.query.all()
             json_ready = [stock.read() for stock in stocks]
             list1 = [item for item in json_ready if item.get('symbol') == symbol]
             users = User.query.all()
-            json_ready_user = [user.read() for user in users]
-            list2 = [item for item in json_ready_user if item.get('uid') == uid]
+            json_ready_user1 = [user.read() for user in users]
+            list2 = [item for item in json_ready_user1 if item.get('uid') == uid]
+            ##print(list2)
             usermoney = list2[0]['stockmoney']
+            print(usermoney)
             currentstockmoney = list1[0]['sheesh']
             if (usermoney > currentstockmoney*quantitytobuy):
                 ## updates stock quantity in stocks table
+                tableid = list1[0]['quantity']
+                print(tableid)
+                tableid = list1[0]['id']
                 tableid = Stocks.query.get(tableid)
                 tableid.update(quantity=newquantity )
                 db.session.commit()
                 ## updates user money
                 tableid_user = list2[0]['id']
-                updatedusermoney = usermoney - currentstockmoney*quantitytobuy
-                tableid_user.update(stockmoney= updatedusermoney )
+                updatedusermoney = usermoney - (currentstockmoney*quantitytobuy)
+                print(updatedusermoney)
+                tableid_user = User.query.get(tableid_user)
+                print(tableid_user)
+                tableid_user.update(stockmoney=updatedusermoney)
                 db.session.commit()
                 ## creates log for transaction
                 transactionamount = currentstockmoney*quantitytobuy
-                ta = Transactions(uid=uid, symbol=symbol,transactiontype=transactiontype, quantity=quantitytobuy, transaction_amount=transactionamount, transaction_date=transactiondate )
+                ta = Transactions(uid=uid, symbol=symbol,transaction_type=transactiontype, quantity=quantitytobuy, transaction_amount=transactionamount)
                 ta.create()   
                 db.session.commit()
             else:
