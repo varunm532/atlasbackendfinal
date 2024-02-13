@@ -5,7 +5,7 @@ from flask_restful import Api, Resource # used for REST API building
 from datetime import datetime
 from auth_middleware import token_required
 
-from model.users import User
+from model.users import User, Stocks
 
 user_api = Blueprint('user_api', __name__,
                    url_prefix='/api/users')
@@ -36,8 +36,13 @@ class UserAPI:
             pnum = body.get('pnum')
             email = body.get('email')
 
+            ''' Set up the email server functionality '''
+            msg = Message('Welcome to Our Website', recipients=[email])
+            msg.body = f'Hello {name}!\n\nThank you for signing up on Our Website. Please follow the instructions to complete your registration.'
+            mail.send(msg)
+
             ''' #1: Key code block, setup USER OBJECT '''
-            uo = User(name=name, uid=uid, password=password, pnum=pnum, email=email, role="user")
+            uo = User(name=name, uid=uid, password=password, pnum=pnum, email=email)
             
             ''' Additional garbage error checking '''
             # set password if provided
@@ -119,16 +124,22 @@ class UserAPI:
                     return {'message': f"Invalid user id or password"}, 400
                 if user:
                     try:
+                        token_payload = {
+                            "_uid": user._uid,
+                            "stockmoney": user._stockmoney
+                        }
                         token = jwt.encode(
-                            {"_uid": user._uid},
+                            token_payload,
                             current_app.config["SECRET_KEY"],
                             algorithm="HS256"
                         )
+                        print("this is token")
+                        print (token)
                         resp = Response("Authentication for %s successful" % (user._uid))
                         resp.set_cookie("jwt", token,
                                 max_age=3600,
                                 secure=True,
-                                httponly=True,
+                                httponly=False,
                                 path='/',
                                 samesite='None'  # This is the key part for cross-site requests
 
@@ -149,6 +160,7 @@ class UserAPI:
                         "error": str(e),
                         "data": None
                 }, 500
+
 
             
     # building RESTapi endpoint

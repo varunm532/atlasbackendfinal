@@ -16,6 +16,7 @@ from __init__ import app, db, cors  # Definitions initialization
 from api.user import user_api # Blueprint import api definition
 from api.player import player_api
 from api.searchstocks import search_api
+from api.stocks import stocks_api
 # database migrations
 from model.users import initUsers
 from model.players import initPlayers
@@ -25,9 +26,9 @@ from projects.projects import app_projects # Blueprint directory import projects
 
 
 app.config['MAIL_SERVER']='smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USERNAME'] = 'torindeanwolff@gmail.com'
-app.config['MAIL_PASSWORD'] = 'dslo bpmz hzwv tvnn'
+app.config['MAIL_PORT'] = 2525
+app.config['MAIL_USERNAME'] = '59af6097944f00'
+app.config['MAIL_PASSWORD'] = '247cd953ec1b36'
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
@@ -40,6 +41,7 @@ app.register_blueprint(user_api) # register api routes
 app.register_blueprint(player_api)
 app.register_blueprint(app_projects) # register app pages
 app.register_blueprint(search_api)
+app.register_blueprint(stocks_api)
 
 @app.errorhandler(404)  # catch for URL not found
 def page_not_found(e):
@@ -53,10 +55,6 @@ def error():
 @app.route('/')  # connects default URL to index() function
 def index():
     return render_template("index.html")
-
-@app.route('/aws/')  # connects /about/ URL to about() function
-def aws():
-    return render_template("aws.html")
 
 @app.route('/table/')  # connects /stub/ URL to stub() function
 def table():
@@ -77,7 +75,6 @@ def register():
         name = request.form.get('name')
         pnum = request.form.get('pnum')
         email = request.form.get('email')
-        print(f"uid: {uid}, password: {password}, name: {name}, pnum: {pnum}, email: {email}")
 
         if not (uid and password and name and pnum and email):
             flash('Please fill out all fields.')
@@ -89,23 +86,19 @@ def register():
             return redirect(url_for('register'))
 
         def send_email(email):
-            try:
-                msg = Message(
-                    'Registration Confirmation',
-                    sender='torindeanwolff@gmail.com',
-                    recipients=[email]
-                )
-                msg.body = 'Thank you for registering to Atlas Index!'
-                mail.send(msg)
-                app.logger.info(f"Email sent successfully to {email}")
-            except Exception as e:
-                app.logger.error(f"Error sending email to {email}: {str(e)}")
-
+            msg = Message(
+                'Registration Confirmation',
+                sender='torindeanwolff@gmail.com',
+                recipients=[email]
+            )
+            msg.body = 'Thank you for registering to Atlas Index!'
+            mail.send(msg)
 
         # Send an email
         send_email(email)
 
         # Redirect to a success page or do something else as needed
+        flash('Registration successful! An email has been sent to your email address.')
         return redirect(url_for('index'))
 
     return render_template('register.html', site=site)
@@ -138,6 +131,11 @@ def profile():
 def display():
     site = {'baseurl': 'http://localhost:8086'}
     return render_template('getusers.html', site=site)
+
+@app.route('/displaystock/', methods=['GET'])
+def displaystock():
+    site = {'baseurl': 'http://localhost:8086'}
+    return render_template('display_stocks.html', site=site)
 
 
 # @app.route('/display/')
